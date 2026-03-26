@@ -1,260 +1,340 @@
 <script lang="ts" setup>
-import type {
-  WorkbenchProjectItem,
-  WorkbenchQuickNavItem,
-  WorkbenchTodoItem,
-  WorkbenchTrendItem,
-} from '@vben/common-ui';
+import type { AccountSummary, ChargeRecord, LogRecord } from '#/api/member/account-center';
 
-import { ref } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
+import { Button, Card, Col, Empty, Row, Space, Spin, Statistic, Table, Tag, message } from 'ant-design-vue';
+import dayjs from 'dayjs';
+
 import {
-  AnalysisChartCard,
-  WorkbenchHeader,
-  WorkbenchProject,
-  WorkbenchQuickNav,
-  WorkbenchTodo,
-  WorkbenchTrends,
-} from '@vben/common-ui';
-import { preferences } from '@vben/preferences';
-import { useUserStore } from '@vben/stores';
-import { openWindow } from '@vben/utils';
-
-import AnalyticsVisitsSource from '../analytics/analytics-visits-source.vue';
-
-const userStore = useUserStore();
-
-// 这是一个示例数据，实际项目中需要根据实际情况进行调整
-// url 也可以是内部路由，在 navTo 方法中识别处理，进行内部跳转
-// 例如：url: /dashboard/workspace
-const projectItems: WorkbenchProjectItem[] = [
-  {
-    color: '#6DB33F',
-    content: 'github.com/YunaiV/ruoyi-vue-pro',
-    date: '2025-01-02',
-    group: 'Spring Boot 单体架构',
-    icon: 'simple-icons:springboot',
-    title: 'ruoyi-vue-pro',
-    url: 'https://github.com/YunaiV/ruoyi-vue-pro',
-  },
-  {
-    color: '#409EFF',
-    content: 'github.com/yudaocode/yudao-ui-admin-vue3',
-    date: '2025-02-03',
-    group: 'Vue3 + element-plus 管理后台',
-    icon: 'ep:element-plus',
-    title: 'yudao-ui-admin-vue3',
-    url: 'https://github.com/yudaocode/yudao-ui-admin-vue3',
-  },
-  {
-    color: '#ff4d4f',
-    content: 'github.com/yudaocode/yudao-mall-uniapp',
-    date: '2025-03-04',
-    group: 'Vue3 + uniapp 商城手机端',
-    icon: 'icon-park-outline:mall-bag',
-    title: 'yudao-mall-uniapp',
-    url: 'https://github.com/yudaocode/yudao-mall-uniapp',
-  },
-  {
-    color: '#1890ff',
-    content: 'github.com/YunaiV/yudao-cloud',
-    date: '2025-04-05',
-    group: 'Spring Cloud 微服务架构',
-    icon: 'material-symbols:cloud-outline',
-    title: 'yudao-cloud',
-    url: 'https://github.com/YunaiV/yudao-cloud',
-  },
-  {
-    color: '#e18525',
-    content: 'github.com/yudaocode/yudao-ui-admin-vben',
-    date: '2025-05-06',
-    group: 'Vue3 + vben5(antd) 管理后台',
-    icon: 'devicon:antdesign',
-    title: 'yudao-ui-admin-vben',
-    url: 'https://github.com/yudaocode/yudao-ui-admin-vben',
-  },
-  {
-    color: '#2979ff',
-    content: 'github.com/yudaocode/yudao-ui-admin-uniapp',
-    date: '2025-06-01',
-    group: 'Vue3 + uniapp 管理手机端',
-    icon: 'ant-design:mobile',
-    title: 'yudao-ui-admin-uniapp',
-    url: 'https://github.com/yudaocode/yudao-ui-admin-uniapp',
-  },
-];
-
-// 同样，这里的 url 也可以使用以 http 开头的外部链接
-const quickNavItems: WorkbenchQuickNavItem[] = [
-  {
-    color: '#1fdaca',
-    icon: 'ion:home-outline',
-    title: '首页',
-    url: '/',
-  },
-  {
-    color: '#ff6b6b',
-    icon: 'lucide:shopping-bag',
-    title: '商城中心',
-    url: '/mall',
-  },
-  {
-    color: '#7c3aed',
-    icon: 'tabler:ai',
-    title: 'AI 大模型',
-    url: '/ai',
-  },
-  {
-    color: '#3fb27f',
-    icon: 'simple-icons:erpnext',
-    title: 'ERP 系统',
-    url: '/erp',
-  },
-  {
-    color: '#4daf1bc9',
-    icon: 'simple-icons:civicrm',
-    title: 'CRM 系统',
-    url: '/crm',
-  },
-  {
-    color: '#1a73e8',
-    icon: 'fa-solid:hdd',
-    title: 'IoT 物联网',
-    url: '/iot',
-  },
-];
-
-const todoItems = ref<WorkbenchTodoItem[]>([
-  {
-    completed: false,
-    content: `系统支持 JDK 8/17/21，Vue 2/3`,
-    date: '2024-07-15 09:30:00',
-    title: '技术兼容性',
-  },
-  {
-    completed: false,
-    content: `后端提供 Spring Boot 2.7/3.2 + Cloud 双架构`,
-    date: '2024-08-30 14:20:00',
-    title: '架构灵活性',
-  },
-  {
-    completed: false,
-    content: `全部开源，个人与企业可 100% 直接使用，无需授权`,
-    date: '2024-07-25 16:45:00',
-    title: '开源免授权',
-  },
-  {
-    completed: false,
-    content: `国内使用最广泛的快速开发平台，远超 10w+ 企业使用`,
-    date: '2024-07-10 11:15:00',
-    title: '广泛企业认可',
-  },
-]);
-const trendItems: WorkbenchTrendItem[] = [
-  {
-    avatar: 'svg:avatar-1',
-    content: `在 <a>开源组</a> 创建了项目 <a>Vue</a>`,
-    date: '刚刚',
-    title: '威廉',
-  },
-  {
-    avatar: 'svg:avatar-2',
-    content: `关注了 <a>威廉</a> `,
-    date: '1个小时前',
-    title: '艾文',
-  },
-  {
-    avatar: 'svg:avatar-3',
-    content: `发布了 <a>个人动态</a> `,
-    date: '1天前',
-    title: '克里斯',
-  },
-  {
-    avatar: 'svg:avatar-4',
-    content: `发表文章 <a>如何编写一个Vite插件</a> `,
-    date: '2天前',
-    title: 'Vben',
-  },
-  {
-    avatar: 'svg:avatar-1',
-    content: `回复了 <a>杰克</a> 的问题 <a>如何进行项目优化？</a>`,
-    date: '3天前',
-    title: '皮特',
-  },
-  {
-    avatar: 'svg:avatar-2',
-    content: `关闭了问题 <a>如何运行项目</a> `,
-    date: '1周前',
-    title: '杰克',
-  },
-  {
-    avatar: 'svg:avatar-3',
-    content: `发布了 <a>个人动态</a> `,
-    date: '1周前',
-    title: '威廉',
-  },
-  {
-    avatar: 'svg:avatar-4',
-    content: `推送了代码到 <a>Github</a>`,
-    date: '2021-04-01 20:00',
-    title: '威廉',
-  },
-  {
-    avatar: 'svg:avatar-4',
-    content: `发表文章 <a>如何编写使用 Admin Vben</a> `,
-    date: '2021-03-01 20:00',
-    title: 'Vben',
-  },
-];
+  fetchAccountSummary,
+  fetchRecentCharges,
+  fetchRecentLogs,
+} from '#/api/member/account-center';
 
 const router = useRouter();
+const summaryLoading = ref(false);
+const chargesLoading = ref(false);
+const logsLoading = ref(false);
+const refreshLoading = ref(false);
 
-// 这是一个示例方法，实际项目中需要根据实际情况进行调整
-// This is a sample method, adjust according to the actual project requirements
-function navTo(nav: WorkbenchProjectItem | WorkbenchQuickNavItem) {
-  if (nav.url?.startsWith('http')) {
-    openWindow(nav.url);
-    return;
+const summary = ref<AccountSummary>();
+const charges = ref<ChargeRecord[]>([]);
+const logs = ref<LogRecord[]>([]);
+
+const chargesError = ref<string | null>(null);
+const logsError = ref<string | null>(null);
+
+const summaryCards = computed(() => {
+  const data = summary.value;
+  return [
+    { title: '账户余额 (元)', value: data?.balance ?? '--' },
+    { title: '累计消费 (元)', value: data?.totalCharged ?? '--' },
+    { title: '今日调用次数', value: data?.todayCalls ?? '--' },
+    { title: '今日扣费 (元)', value: data?.todayChargeAmount ?? '--' },
+  ];
+});
+
+function formatTime(value?: string) {
+  if (!value) return '--';
+  return dayjs(value).format('YYYY-MM-DD HH:mm:ss');
+}
+
+function formatStatus(status: number | string) {
+  if (typeof status === 'number') {
+    return status === 1 ? '成功' : '失败';
   }
-  if (nav.url?.startsWith('/')) {
-    router.push(nav.url).catch((error) => {
-      console.error('Navigation failed:', error);
-    });
-  } else {
-    console.warn(`Unknown URL for navigation item: ${nav.title} -> ${nav.url}`);
+  return status;
+}
+
+function formatAmount(value?: string | number) {
+  if (value === undefined || value === null || value === '') return '--';
+  return typeof value === 'number' ? value.toFixed(2) : value;
+}
+
+async function loadSummary() {
+  summaryLoading.value = true;
+  try {
+    summary.value = await fetchAccountSummary();
+  } catch (error) {
+    console.error(error);
+    message.error('加载账户摘要失败');
+  } finally {
+    summaryLoading.value = false;
   }
 }
+
+async function loadCharges() {
+  chargesLoading.value = true;
+  chargesError.value = null;
+  try {
+    const result = await fetchRecentCharges();
+    charges.value = result.list || [];
+  } catch (error) {
+    console.error(error);
+    chargesError.value = '加载消费记录失败';
+    message.error('加载消费记录失败');
+  } finally {
+    chargesLoading.value = false;
+  }
+}
+
+async function loadLogs() {
+  logsLoading.value = true;
+  logsError.value = null;
+  try {
+    const result = await fetchRecentLogs();
+    logs.value = result.list || [];
+  } catch (error) {
+    console.error(error);
+    logsError.value = '加载请求日志失败';
+    message.error('加载请求日志失败');
+  } finally {
+    logsLoading.value = false;
+  }
+}
+
+async function loadAll() {
+  refreshLoading.value = true;
+  try {
+    await Promise.all([loadSummary(), loadCharges(), loadLogs()]);
+  } finally {
+    refreshLoading.value = false;
+  }
+}
+
+function goto(path: string, extra?: Record<string, any>) {
+  router.push({ path, query: extra }).catch((error) => {
+    console.error('Navigation failed:', error);
+  });
+}
+
+function viewChargeList() {
+  goto('/member/account/charges');
+}
+
+function viewLogList() {
+  goto('/member/account/logs');
+}
+
+function viewLogDetail(item: LogRecord) {
+  goto('/member/account/logs', { traceId: item.traceId });
+}
+
+const chargeColumns = [
+  { title: '扣费时间', dataIndex: 'chargeTime', key: 'chargeTime' },
+  { title: 'API', dataIndex: 'apiName', key: 'apiName' },
+  { title: '金额 (元)', dataIndex: 'price', key: 'price' },
+  { title: '余额变动', dataIndex: 'balanceAfter', key: 'balanceChange' },
+  { title: '状态', dataIndex: 'chargeStatus', key: 'chargeStatus' },
+  { title: 'Trace ID', dataIndex: 'traceId', key: 'traceId' },
+];
+
+const logColumns = [
+  { title: '调用时间', dataIndex: 'requestTime', key: 'requestTime' },
+  { title: 'API', dataIndex: 'apiName', key: 'apiName', ellipsis: true },
+  { title: '业务状态', dataIndex: 'responseStatus', key: 'responseStatus' },
+  { title: '扣费 (元)', dataIndex: 'deductAmount', key: 'deductAmount' },
+  { title: '操作', key: 'action' },
+];
+
+onMounted(() => {
+  loadAll();
+});
 </script>
 
 <template>
-  <div class="p-5">
-    <WorkbenchHeader
-      :avatar="userStore.userInfo?.avatar || preferences.app.defaultAvatar"
-    >
-      <template #title>
-        早安, {{ userStore.userInfo?.nickname }}, 开始您一天的工作吧！
-      </template>
-      <template #description> 今日晴，20℃ - 32℃！ </template>
-    </WorkbenchHeader>
+  <div class="p-5 space-y-5">
+    <div class="flex items-center justify-between">
+      <div>
+        <div class="text-lg font-medium">账户工作台</div>
+        <div class="text-gray-500">快速掌握余额与最新消费/日志</div>
+      </div>
+      <Button type="primary" :loading="refreshLoading" @click="loadAll">刷新</Button>
+    </div>
 
-    <div class="mt-5 flex flex-col lg:flex-row">
-      <div class="mr-4 w-full lg:w-3/5">
-        <WorkbenchProject :items="projectItems" title="项目" @click="navTo" />
-        <WorkbenchTrends :items="trendItems" class="mt-5" title="最新动态" />
-      </div>
-      <div class="w-full lg:w-2/5">
-        <WorkbenchQuickNav
-          :items="quickNavItems"
-          class="mt-5 lg:mt-0"
-          title="快捷导航"
-          @click="navTo"
-        />
-        <WorkbenchTodo :items="todoItems" class="mt-5" title="待办事项" />
-        <AnalysisChartCard class="mt-5" title="访问来源">
-          <AnalyticsVisitsSource />
-        </AnalysisChartCard>
-      </div>
+    <Row :gutter="16">
+      <Col v-for="card in summaryCards" :key="card.title" :xs="24" :sm="12" :md="6">
+        <Card size="small" :loading="summaryLoading">
+          <Statistic :title="card.title" :value="card.value" />
+        </Card>
+      </Col>
+    </Row>
+
+    <Card title="最近一次调用" :loading="summaryLoading" class="last-call-card">
+      <template v-if="summary?.lastCall">
+        <div class="last-call-grid">
+          <div class="last-call-main">
+            <div class="text-xs uppercase text-gray-500">Trace ID</div>
+            <div class="flex items-center gap-2">
+              <span class="font-mono text-sm">{{ summary.lastCall.traceId }}</span>
+              <Button type="link" size="small" @click="goto('/member/account/logs', { traceId: summary.lastCall.traceId })">查看详情</Button>
+            </div>
+            <div class="text-lg font-medium">{{ summary.lastCall.apiName || summary.lastCall.apiCode }}</div>
+            <div class="text-sm text-gray-500">{{ formatTime(summary.lastCall.requestTime) }}</div>
+          </div>
+          <div class="last-call-meta">
+            <div>
+              <div class="label">HTTP 状态</div>
+              <div class="value">{{ summary.lastCall.httpStatus }}</div>
+            </div>
+            <div>
+              <div class="label">业务状态</div>
+              <Tag :color="summary.lastCall.responseStatus === 'SUCCESS' ? 'green' : 'red'">
+                {{ summary.lastCall.responseStatus }}
+              </Tag>
+            </div>
+            <div>
+              <div class="label">扣费金额</div>
+              <div class="value">{{ formatAmount(summary.lastCall.deductAmount) }} 元</div>
+            </div>
+          </div>
+        </div>
+      </template>
+      <template v-else>
+        <Empty description="暂无调用记录" />
+      </template>
+    </Card>
+
+    <div class="stacked-cards">
+      <Card title="近期消费记录">
+        <template #extra>
+          <Space>
+            <Button type="link" size="small" @click="viewChargeList">查看更多</Button>
+          </Space>
+        </template>
+          <Spin :spinning="chargesLoading">
+            <template v-if="chargesError">
+              <div class="text-center text-red-500">
+                {{ chargesError }}
+                <Button type="link" size="small" @click="loadCharges">重试</Button>
+              </div>
+            </template>
+            <template v-else>
+              <Table
+                :columns="chargeColumns"
+                :data-source="charges"
+                :pagination="false"
+                size="small"
+                row-key="traceId"
+                class="overview-table"
+                :scroll="{ x: 860 }"
+              >
+                <template #bodyCell="{ column, record }">
+                  <template v-if="column.key === 'chargeTime'">
+                    {{ formatTime(record.chargeTime) }}
+                  </template>
+                  <template v-else-if="column.key === 'apiName'">
+                    {{ record.apiName || record.apiCode }}
+                  </template>
+                  <template v-else-if="column.key === 'balanceChange'">
+                    {{ formatAmount(record.balanceBefore) }} → {{ formatAmount(record.balanceAfter) }}
+                  </template>
+                  <template v-else-if="column.key === 'chargeStatus'">
+                    <Tag :color="record.chargeStatus === 1 ? 'green' : 'red'">
+                      {{ formatStatus(record.chargeStatus) }}
+                    </Tag>
+                  </template>
+                  <template v-else>
+                    {{ record[column.dataIndex] ?? '--' }}
+                  </template>
+                </template>
+              </Table>
+              <Empty v-if="!chargesLoading && !charges.length" description="暂无扣费记录" />
+            </template>
+          </Spin>
+      </Card>
+
+      <Card title="近期请求日志">
+        <template #extra>
+          <Space>
+            <Button type="link" size="small" @click="viewLogList">查看更多</Button>
+          </Space>
+        </template>
+          <Spin :spinning="logsLoading">
+            <template v-if="logsError">
+              <div class="text-center text-red-500">
+                {{ logsError }}
+                <Button type="link" size="small" @click="loadLogs">重试</Button>
+              </div>
+            </template>
+            <template v-else>
+              <Table
+                :columns="logColumns"
+                :data-source="logs"
+                :pagination="false"
+                size="small"
+                row-key="traceId"
+                class="overview-table"
+                :scroll="{ x: 760 }"
+              >
+                <template #bodyCell="{ column, record }">
+                  <template v-if="column.key === 'requestTime'">
+                    {{ formatTime(record.requestTime) }}
+                  </template>
+                  <template v-else-if="column.key === 'apiName'">
+                    {{ record.apiName || record.apiCode }}
+                  </template>
+                  <template v-else-if="column.key === 'responseStatus'">
+                    <Tag :color="record.responseStatus === 'SUCCESS' ? 'green' : 'red'">
+                      {{ record.responseStatus }}
+                    </Tag>
+                  </template>
+                  <template v-else-if="column.key === 'deductAmount'">
+                    {{ formatAmount(record.deductAmount) }}
+                  </template>
+                  <template v-else-if="column.key === 'action'">
+                    <Button type="link" size="small" @click="viewLogDetail(record)">详情</Button>
+                  </template>
+                  <template v-else>
+                    {{ record[column.dataIndex] ?? '--' }}
+                  </template>
+                </template>
+              </Table>
+              <Empty v-if="!logsLoading && !logs.length" description="暂无请求日志" />
+            </template>
+          </Spin>
+      </Card>
     </div>
   </div>
 </template>
+
+<style scoped>
+.last-call-card {
+  border-left: 4px solid #1677ff;
+}
+
+.last-call-grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.last-call-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1rem;
+}
+
+.last-call-meta .label {
+  font-size: 12px;
+  color: #888;
+  text-transform: uppercase;
+}
+
+.last-call-meta .value {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.stacked-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.overview-table :deep(.ant-table-thead > tr > th) {
+  white-space: nowrap;
+}
+</style>

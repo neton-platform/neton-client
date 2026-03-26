@@ -12,6 +12,11 @@
     "analytics": "分析页",
     "workspace": "工作台"
   },
+  "memberAccount": {
+    "overview": "账户概览",
+    "charges": "消费记录",
+    "logs": "请求日志"
+  },
   "action": {
     "action": "操作",
     "add": "新增",
