@@ -1,17 +1,36 @@
 <script lang="ts" setup>
-import type { AccountSummary } from '#/api/member/account-center';
+import type {
+  AccountApiItem,
+  AccountCredential,
+  AccountSummary,
+} from '#/api/member/account-center';
 
-import { onMounted, ref, computed } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 import { Card, Col, Row, Space, Statistic, message, Button } from 'ant-design-vue';
 import { useRouter } from 'vue-router';
 import dayjs from 'dayjs';
 
-import { fetchAccountSummary } from '#/api/member/account-center';
+import {
+  fetchAccountApis,
+  fetchAccountCredential,
+  fetchAccountSummary,
+} from '#/api/member/account-center';
+import CredentialCard from '../components/credential-card.vue';
+import AccountApiList from '../components/account-api-list.vue';
+import ApiDocDrawer from '../components/api-doc-drawer.vue';
 
 const router = useRouter();
 const loading = ref(false);
 const summary = ref<AccountSummary>();
+const credential = ref<AccountCredential>();
+const credentialLoading = ref(false);
+const credentialError = ref<Error | null>(null);
+const apiList = ref<AccountApiItem[]>([]);
+const apiLoading = ref(false);
+const apiError = ref<Error | null>(null);
+const docApi = ref<AccountApiItem | null>(null);
+const drawerOpen = ref(false);
 
 const summaryCards = computed(() => {
   const data = summary.value;
@@ -67,12 +86,47 @@ async function loadSummary() {
   }
 }
 
+async function loadCredential() {
+  credentialLoading.value = true;
+  credentialError.value = null;
+  try {
+    credential.value = await fetchAccountCredential();
+  } catch (error) {
+    credentialError.value = error as Error;
+  } finally {
+    credentialLoading.value = false;
+  }
+}
+
+async function loadApis() {
+  apiLoading.value = true;
+  apiError.value = null;
+  try {
+    apiList.value = await fetchAccountApis();
+  } catch (error) {
+    apiError.value = error as Error;
+  } finally {
+    apiLoading.value = false;
+  }
+}
+
 function goto(path: string) {
   router.push(path);
 }
 
+function handleViewDoc(api: AccountApiItem) {
+  docApi.value = api;
+  drawerOpen.value = true;
+}
+
+function handleCloseDoc() {
+  drawerOpen.value = false;
+}
+
 onMounted(() => {
   loadSummary();
+  loadCredential();
+  loadApis();
 });
 </script>
 
@@ -86,6 +140,30 @@ onMounted(() => {
           </Card>
         </Col>
       </Row>
+
+      <Row :gutter="16">
+        <Col :xs="24" :md="24">
+          <CredentialCard
+            :credential="credential"
+            :loading="credentialLoading"
+            :error="credentialError"
+            @retry="loadCredential"
+          />
+        </Col>
+        </Row>
+         <Row :gutter="16">
+        <Col :xs="24" :md="24">
+          <Card title="已开通接口" class="shadow-sm">
+            <AccountApiList
+              :data="apiList"
+              :loading="apiLoading"
+              :error="apiError"
+              @retry="loadApis"
+              @view="handleViewDoc"
+            />
+          </Card>
+        </Col>
+        </Row>
 
       <Card title="最近调用" :loading="loading">
         <template #extra>
@@ -108,6 +186,7 @@ onMounted(() => {
         </div>
         <div v-else class="text-gray-500">暂无调用记录</div>
       </Card>
+      <ApiDocDrawer :api="docApi" :open="drawerOpen" @close="handleCloseDoc" />
     </Space>
   </div>
 </template>

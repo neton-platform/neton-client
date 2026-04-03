@@ -20,6 +20,34 @@ export interface AccountSummary {
   } | null;
 }
 
+export interface AccountCredential {
+  clientId: string;
+  clientSecret: string;
+  clientIdMasked: string;
+  clientSecretMasked: string;
+}
+
+export interface ApiSchemaField {
+  field: string;
+  type: string;
+  required: boolean;
+  description: string;
+}
+
+export interface AccountApiItem {
+  apiCode: string;
+  apiName: string;
+  description?: string;
+  method: string;
+  path: string;
+  status: 'ENABLED' | 'DISABLED';
+  rateLimit?: string;
+  requestSchema: ApiSchemaField[];
+  responseSchema: ApiSchemaField[];
+  requestExample?: string;
+  responseExample?: string;
+}
+
 export interface TrendPoint {
   time: string;
   deductAmount: string;
@@ -96,6 +124,14 @@ export interface LogDetail {
 
 export function fetchAccountSummary() {
   return requestClient.get<AccountSummary>('/member/account/summary');
+}
+
+export function fetchAccountCredential() {
+  return requestClient.get<AccountCredential>('/platform/app/account/credentials');
+}
+
+export function fetchAccountApis() {
+  return requestClient.get<AccountApiItem[]>('/platform/app/account/apis');
 }
 
 export function fetchTrend(params: TrendQuery) {
