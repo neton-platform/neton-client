@@ -123,8 +123,6 @@ export const useAuthStore = defineStore('auth', () => {
     };
     userStore.setUserInfo(userInfo);
     userStore.setUserRoles(['member']);
-    // client 使用前端静态路由，不设置动态菜单
-    accessStore.setIsAccessChecked(true);
     return userInfo;
   }
 

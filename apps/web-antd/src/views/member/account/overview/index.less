@@ -1,0 +1,18 @@
+.account-overview {
+  &__row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  &__column {
+    flex: 1;
+    min-width: 280px;
+  }
+
+  @media (max-width: 992px) {
+    &__row {
+      flex-direction: column;
+    }
+  }
+}
