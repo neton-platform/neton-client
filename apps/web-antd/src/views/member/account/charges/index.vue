@@ -17,11 +17,13 @@ const pagination = reactive({ current: 1, pageSize: 20, total: 0 });
 const filters = reactive({ apiCode: '' });
 
 const columns = [
-  { title: '扣费时间', dataIndex: 'chargeTime', key: 'chargeTime' },
+  { title: '时间', dataIndex: 'chargeTime', key: 'chargeTime' },
   { title: 'API', dataIndex: 'apiName', key: 'apiName' },
-  { title: '扣费金额 (元)', dataIndex: 'price', key: 'price' },
+  { title: '类型', dataIndex: 'changeDirection', key: 'changeDirection' },
+  { title: '金额 (元)', dataIndex: 'price', key: 'price' },
   { title: '余额变化 (元)', dataIndex: 'balanceDiff', key: 'balanceDiff' },
   { title: '状态', dataIndex: 'chargeStatus', key: 'chargeStatus' },
+  { title: '备注', dataIndex: 'remark', key: 'remark' },
   { title: 'Trace ID', dataIndex: 'traceId', key: 'traceId' },
 ];
 
@@ -32,6 +34,20 @@ function formatDate(value?: string) {
 
 function formatStatus(status: number) {
   return status === 1 ? '成功' : '失败';
+}
+
+function parseAmount(value?: string) {
+  if (!value) return 0;
+  const num = Number(value);
+  return Number.isNaN(num) ? 0 : num;
+}
+
+function getChangeDirection(record: ChargeRecord) {
+  const before = parseAmount(record.balanceBefore);
+  const after = parseAmount(record.balanceAfter);
+  if (after > before) return { text: '增加', color: 'green' };
+  if (after < before) return { text: '扣减', color: 'red' };
+  return { text: '无变化', color: 'default' };
 }
 
 function buildParams(page?: number) {
@@ -123,6 +139,11 @@ onMounted(() => {
           <template v-else-if="column.key === 'apiName'">
             {{ record.apiName || record.apiCode }}
           </template>
+          <template v-else-if="column.key === 'changeDirection'">
+            <Tag :color="getChangeDirection(record).color">
+              {{ getChangeDirection(record).text }}
+            </Tag>
+          </template>
           <template v-else-if="column.key === 'balanceDiff'">
             {{ record.balanceBefore }} → {{ record.balanceAfter }}
           </template>
@@ -130,6 +151,11 @@ onMounted(() => {
             <Tag :color="record.chargeStatus === 1 ? 'green' : 'red'">
               {{ formatStatus(record.chargeStatus) }}
             </Tag>
+          </template>
+          <template v-else-if="column.key === 'remark'">
+            <span class="whitespace-pre-wrap break-all">
+              {{ record.remark || '--' }}
+            </span>
           </template>
           <template v-else>
             {{ record[column.dataIndex] ?? '--' }}

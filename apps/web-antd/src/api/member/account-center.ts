@@ -70,6 +70,7 @@ export interface ChargeRecord {
   balanceAfter: string;
   chargeStatus: number;
   failureReason?: string;
+  remark?: string;
   traceId: string;
 }
 
