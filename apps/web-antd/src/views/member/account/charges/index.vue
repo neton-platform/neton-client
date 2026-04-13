@@ -45,7 +45,7 @@ function parseAmount(value?: string) {
 function getChangeDirection(record: ChargeRecord) {
   const before = parseAmount(record.balanceBefore);
   const after = parseAmount(record.balanceAfter);
-  if (after > before) return { text: '增加', color: 'green' };
+  if (after > before) return { text: '充值', color: 'green' };
   if (after < before) return { text: '扣减', color: 'red' };
   return { text: '无变化', color: 'default' };
 }
