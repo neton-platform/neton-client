@@ -54,9 +54,7 @@ export async function loginApi(data: AuthApi.LoginParams) {
 
 /** 刷新 accessToken */
 export async function refreshTokenApi(refreshToken: string) {
-  return baseRequestClient.post(
-    `/member/auth/refresh-token?refreshToken=${refreshToken}`,
-  );
+  return baseRequestClient.post('/member/auth/refresh-token', { refreshToken });
 }
 
 /** 退出登录 */

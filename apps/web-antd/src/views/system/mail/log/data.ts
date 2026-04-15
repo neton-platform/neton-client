@@ -4,6 +4,8 @@ import type { DescriptionItemSchema } from '#/components/description';
 
 import { h } from 'vue';
 
+import DOMPurify from 'dompurify';
+
 import { DICT_TYPE } from '@vben/constants';
 import { getDictOptions } from '@vben/hooks';
 import { formatDateTime } from '@vben/utils';
@@ -228,7 +230,7 @@ export function useDetailSchema(): DescriptionItemSchema[] {
       span: 2,
       render: (val) => {
         return h('div', {
-          innerHTML: val || '',
+          innerHTML: DOMPurify.sanitize(val || ''),
         });
       },
     },

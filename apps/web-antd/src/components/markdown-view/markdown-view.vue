@@ -47,7 +47,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div ref="contentRef" class="markdown-view" v-html="renderedMarkdown"></div>
+  <div ref="contentRef" class="markdown-view" v-dompurify-html="renderedMarkdown"></div>
 </template>
 
 <style lang="scss">

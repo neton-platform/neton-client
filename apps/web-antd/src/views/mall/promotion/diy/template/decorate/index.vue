@@ -8,7 +8,6 @@ import { useRoute } from 'vue-router';
 
 import { useTabs } from '@vben/hooks';
 import { IconifyIcon } from '@vben/icons';
-import { useAccessStore } from '@vben/stores';
 import { isEmpty } from '@vben/utils';
 
 import { message, Radio, RadioGroup } from 'ant-design-vue';
@@ -59,8 +58,7 @@ async function getPageDetail(id: any) {
   try {
     formData.value = await getDiyTemplateProperty(id);
     // 拼接手机预览链接
-    const accessStore = useAccessStore();
-    previewUrl.value = `${domain}?templateId=${formData.value.id}&tenantId=${accessStore.tenantId}`;
+    previewUrl.value = `${domain}?templateId=${formData.value.id}`;
   } finally {
     hideLoading();
   }
